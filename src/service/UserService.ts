@@ -5,7 +5,7 @@ import { compare, hash } from "bcryptjs";
 import { FastifyInstance } from "fastify";
 
 class UserService {
-    public async register({ name, email, password, birthDate }: CreateUserType): Promise<void> {
+    public async register({ name, email, password }: CreateUserType): Promise<void> {
         const userExist = await prisma.user.findUnique({
             where: { email: email }
         })
