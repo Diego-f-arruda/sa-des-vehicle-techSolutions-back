@@ -17,3 +17,94 @@ model User {
 
   @@map("users")
 }
+
+model Acessorio {
+  id      String   @id
+  estoque Estoque?
+
+  utilizados AcessorioUsado[]
+
+  @@map("acessorios")
+}
+
+model Estoque {
+  id          String        @id
+  acessorioId String        @unique
+  nome        String
+  tipo        TipoAcessorio
+  quantidade  Int
+  createdAt   DateTime
+  updatedAt   DateTime @updatedAt
+
+  acessorio Acessorio @relation(fields: [acessorioId], references: [id])
+
+  @@map("estoque")
+}
+
+model Veiculo {
+  id            String @id
+  modelo        String
+  fabricante    String
+  placa         String @unique
+  anoFabricacao Int
+  createdAt   DateTime
+  updatedAt   DateTime
+
+  manutencoes Manutencao[]
+
+  @@map("veiculos")
+}
+
+model Qualidade {
+  id                String  @id
+  motor             Boolean
+  pintura           Boolean
+  acabamentoInterno Boolean
+  fluidos           Boolean
+  opcionais         Boolean
+  numberOS          Int     @unique
+  createdAt   DateTime
+  updatedAt   DateTime
+
+  @@map("qualidade")
+}
+
+model Manutencao {
+  id          String           @id
+  veiculoId   String
+  dataServico DateTime
+  observacoes String?
+  status      StatusManutencao
+  createdAt   DateTime
+  updatedAt   DateTime
+
+  veiculo          Veiculo          @relation(fields: [veiculoId], references: [id])
+  acessoriosUsados AcessorioUsado[]
+
+  @@map("manutencao")
+}
+
+model AcessorioUsado {
+  id           String @id
+  manutencaoId String
+  acessorioId  String
+  quantidade   Int
+  createdAt   DateTime
+  updatedAt   DateTime
+
+  manutencao Manutencao @relation(fields: [manutencaoId], references: [id])
+  acessorio  Acessorio  @relation(fields: [acessorioId], references: [id])
+
+  @@map("acessoriosUsados")
+}
+
+enum TipoAcessorio {
+  PECA
+  ELETRONICO
+  ACABAMENTO
+}
+
+enum StatusManutencao {
+  pendente
+  finalizado
+}
