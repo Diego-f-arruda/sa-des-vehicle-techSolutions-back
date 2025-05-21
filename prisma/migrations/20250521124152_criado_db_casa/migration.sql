@@ -30,6 +30,8 @@ CREATE TABLE "estoque" (
     "nome" TEXT NOT NULL,
     "tipo" "TipoAcessorio" NOT NULL,
     "quantidade" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "estoque_pkey" PRIMARY KEY ("id")
 );
@@ -41,6 +43,8 @@ CREATE TABLE "veiculos" (
     "fabricante" TEXT NOT NULL,
     "placa" TEXT NOT NULL,
     "anoFabricacao" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "veiculos_pkey" PRIMARY KEY ("id")
 );
@@ -54,6 +58,8 @@ CREATE TABLE "qualidade" (
     "fluidos" BOOLEAN NOT NULL,
     "opcionais" BOOLEAN NOT NULL,
     "numberOS" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "qualidade_pkey" PRIMARY KEY ("id")
 );
@@ -65,6 +71,8 @@ CREATE TABLE "manutencao" (
     "dataServico" TIMESTAMP(3) NOT NULL,
     "observacoes" TEXT,
     "status" "StatusManutencao" NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "manutencao_pkey" PRIMARY KEY ("id")
 );
@@ -75,6 +83,8 @@ CREATE TABLE "acessoriosUsados" (
     "manutencaoId" TEXT NOT NULL,
     "acessorioId" TEXT NOT NULL,
     "quantidade" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "acessoriosUsados_pkey" PRIMARY KEY ("id")
 );
