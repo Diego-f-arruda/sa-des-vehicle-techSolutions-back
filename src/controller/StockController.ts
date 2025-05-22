@@ -1,6 +1,7 @@
 import { TipoAcessorio } from "@prisma/client";
 import { FastifyInstance, FastifyReply, FastifyRequest  } from "fastify";
 import { stockService } from "../service/stockService";
+import { User } from "@prisma/client";
 
 
 export async function stockController(app: FastifyInstance){
@@ -33,5 +34,12 @@ export async function stockController(app: FastifyInstance){
             return reply.code(404).send({ error: error.message})
         }
     });
+
+    app.get("/stock",  async (request: FastifyRequest, reply) => {
+        const { id } = request.user as User
+        
+        const list = await stockService.getAll(id);
+        return reply.code(200).send(list);
+    })
 
 }

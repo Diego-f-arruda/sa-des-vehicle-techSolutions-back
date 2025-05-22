@@ -39,6 +39,22 @@ class StockService {
             data: stockUpdate
         })
     }
+
+    public async getAll(id: string): Promise<EstoquePrisma> {
+        const stock = await prisma.estoque.findMany({
+            orderBy: { createdAt: 'desc' },
+            where: { id }            
+            })
+
+            const estoqueMap = stock.map(estoque => {
+                id: estoque.id,
+                nome: stock.nome
+            })
+
+            return estoqueMap
+        };
+
+
 }
 
 export const stockService = new StockService();
