@@ -14,12 +14,11 @@ export const loginSchema = {
 export const registerSchema = {
     body: {
         type: "object",
-        required: ['name','email', 'password', 'birthDate'],
+        required: ['name','email', 'password'],
         properties: {
             name: { type: 'string'},
             email: { type: 'string', format: 'email'},
-            password: { type: 'string'},
-            birthDate: { type: 'string'}
+            password: { type: 'string'}
         },
     },
     tags: ['Auth'],

@@ -18,84 +18,105 @@ model User {
   @@map("users")
 }
 
-model Acessorio {
-  id      String   @id
-  estoque Estoque?
+model Produto {
+  id         String        @id
+  nome       String
+  tipo       TipoAcessorio
+  quantidade Int
+  createdAt  DateTime
+  updatedAt  DateTime      @updatedAt
 
-  utilizados AcessorioUsado[]
+  utilizados ProdutoUsado[]
 
-  @@map("acessorios")
-}
-
-model Estoque {
-  id          String        @id
-  acessorioId String        @unique
-  nome        String
-  tipo        TipoAcessorio
-  quantidade  Int
-  createdAt   DateTime
-  updatedAt   DateTime @updatedAt
-
-  acessorio Acessorio @relation(fields: [acessorioId], references: [id])
-
-  @@map("estoque")
+  @@map("produto")
 }
 
 model Veiculo {
-  id            String @id
+  id            String        @id
   modelo        String
   fabricante    String
-  placa         String @unique
+  placa         String        @unique
   anoFabricacao Int
-  createdAt   DateTime
-  updatedAt   DateTime
+  createdAt     DateTime
+  updatedAt     DateTime      @updatedAt
+  status        VeiculoStatus @default(NOVO)
 
-  manutencoes Manutencao[]
+  manutencoes     Manutencao[]
+  qualidades      Qualidade[]
+  ordensDeServico OrdemDeServico[]
 
   @@map("veiculos")
 }
 
 model Qualidade {
-  id                String  @id
+  id                String   @id
+  veiculoId         String
+  aprovado          Boolean
+  observacoes       String?
   motor             Boolean
   pintura           Boolean
   acabamentoInterno Boolean
   fluidos           Boolean
   opcionais         Boolean
-  numberOS          Int     @unique
-  createdAt   DateTime
-  updatedAt   DateTime
+  numberOS          Int      @unique
+  createdAt         DateTime
+  updatedAt         DateTime @updatedAt
+
+  veiculo          Veiculo         @relation(fields: [veiculoId], references: [id])
+  ordemDeServico   OrdemDeServico?
+  ordemDeServicoId String?         @unique
 
   @@map("qualidade")
 }
 
-model Manutencao {
-  id          String           @id
-  veiculoId   String
-  dataServico DateTime
-  observacoes String?
-  status      StatusManutencao
-  createdAt   DateTime
-  updatedAt   DateTime
+model OrdemDeServico {
+  id             String    @id
+  numberOS       String    @unique
+  veiculoId      String
+  qualidadeId    String    @unique
+  dataAbertura   DateTime  @default(now())
+  dataFechamento DateTime?
 
-  veiculo          Veiculo          @relation(fields: [veiculoId], references: [id])
-  acessoriosUsados AcessorioUsado[]
+  createdAt DateTime
+  updatedAt DateTime @updatedAt
+
+  veiculo    Veiculo     @relation(fields: [veiculoId], references: [id])
+  qualidade  Qualidade   @relation(fields: [qualidadeId], references: [id])
+  manutencao Manutencao?
+
+  @@map("ordens_de_servico")
+}
+
+model Manutencao {
+  id               String           @id
+  ordemDeServicoId String           @unique
+  dataServico      DateTime
+  observacoes      String?
+  status           StatusManutencao
+  createdAt        DateTime
+  updatedAt        DateTime         @updatedAt
+  qualidadeId      String?          @unique
+
+  ordemDeServico OrdemDeServico @relation(fields: [ordemDeServicoId], references: [id])
+  produtosUsados ProdutoUsado[]
+  Veiculo        Veiculo       @relation(fields: [veiculoId], references: [id])
+  veiculoId      String
 
   @@map("manutencao")
 }
 
-model AcessorioUsado {
-  id           String @id
+model ProdutoUsado {
+  id           String   @id
   manutencaoId String
-  acessorioId  String
+  produtoId    String
   quantidade   Int
-  createdAt   DateTime
-  updatedAt   DateTime
+  createdAt    DateTime
+  updatedAt    DateTime @updatedAt
 
   manutencao Manutencao @relation(fields: [manutencaoId], references: [id])
-  acessorio  Acessorio  @relation(fields: [acessorioId], references: [id])
+  produto    Produto    @relation(fields: [produtoId], references: [id])
 
-  @@map("acessoriosUsados")
+  @@map("produtosUsados")
 }
 
 enum TipoAcessorio {
@@ -107,4 +128,12 @@ enum TipoAcessorio {
 enum StatusManutencao {
   pendente
   finalizado
+}
+
+enum VeiculoStatus {
+  NOVO
+  EM_QUALIDADE
+  APROVADO
+  REPROVADO
+  EM_MANUTENCAO
 }
