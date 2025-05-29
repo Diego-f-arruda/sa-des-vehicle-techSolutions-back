@@ -1,43 +1,54 @@
-import { PrismaClient, Veiculo, VeiculoStatus } from "@prisma/client";
+import { PrismaClient, Veiculo, StatusVeiculo, CorVeiculo, TipoCambio } from "@prisma/client";
 import { prisma } from "../prisma/client";
+import { CreateVeiculoBody } from "../types/Vehicle";
 
 class VehicleService {
     constructor(private prisma: PrismaClient) { }
 
-    public async create(data: { modelo: string, fabricante: string, placa: string, anoFabricacao: number }): Promise<Veiculo> {
-        const { modelo, fabricante, placa, anoFabricacao } = data;
+    public async create(data: CreateVeiculoBody): Promise<Veiculo> {
+        const { modelo, cor, cambio, kitRodaId, status } = data;
 
-        if (!modelo || typeof modelo !== 'string' || modelo.trim().length < 2) {
-            throw new Error("Modelo do veículo inválido ou ausente.");
-        }
-        if (!fabricante || typeof fabricante !== 'string' || fabricante.trim().length < 2) {
-            throw new Error("Fabricante do veículo inválido ou ausente.");
-        }
-        if (!placa || typeof placa !== 'string' || placa.trim().length !== 7) {
-            throw new Error("Placa do veículo inválida. Deve ter 7 caracteres.");
-        }
-        if (typeof anoFabricacao !== 'number' || anoFabricacao < 1900 || anoFabricacao > new Date().getFullYear() + 1) {
-            throw new Error("Ano de fabricação inválido.");
+        if (kitRodaId !== undefined && typeof kitRodaId !== 'string') {
+            throw new Error("ID do Kit Roda inválido.");
         }
 
-        const existingVehicle = await this.prisma.veiculo.findUnique({
-            where: { placa: placa.toUpperCase() },
-        });
+        if (!cor || !Object.values(CorVeiculo).includes(cor as CorVeiculo)) {
+            throw new Error(`Cor de veículo inválida. Valores permitidos: ${Object.values(CorVeiculo).join(', ')}`);
+        }
+        
+        const finalCor: CorVeiculo = cor as CorVeiculo; 
 
-        if (existingVehicle) {
-            throw new Error(`Veículo com a placa '${placa}' já cadastrado.`);
+        if (!cambio || !Object.values(TipoCambio).includes(cambio as TipoCambio)) {
+            throw new Error(`Tipo de câmbio inválido. Valores permitidos: ${Object.values(TipoCambio).join(', ')}`);
+        }
+        const finalCambio: TipoCambio = cambio as TipoCambio; 
+
+        let finalStatus: StatusVeiculo | undefined = undefined;
+        
+        if (status !== undefined) {
+            if (!Object.values(StatusVeiculo).includes(status as StatusVeiculo)) {
+                throw new Error(`Status de veículo inválido. Valores permitidos: ${Object.values(StatusVeiculo).join(', ')}`);
+            }
+            finalStatus = status as StatusVeiculo; 
+        }
+
+        if (kitRodaId) {
+            const kitRodaExists = await this.prisma.produto.findUnique({ where: { id: kitRodaId } });
+            if (!kitRodaExists) {
+                throw new Error(`Produto (Kit Roda) com ID '${kitRodaId}' não encontrado.`);
+            }
+            
         }
 
         const newVehicle = await this.prisma.veiculo.create({
             data: {
                 id: crypto.randomUUID(),
-                modelo: modelo.trim(),
-                fabricante: fabricante.trim(),
-                placa: placa.toUpperCase(),
-                anoFabricacao: anoFabricacao,
-                status: VeiculoStatus.NOVO,
-                createdAt: new Date(),
-                updatedAt: new Date(),
+                modelo,
+                cor: finalCor,
+                cambio: finalCambio,
+                kitRodaId, 
+                status: finalStatus, 
+                createdAt: new Date()
             },
         });
         return newVehicle;
@@ -48,47 +59,67 @@ class VehicleService {
             throw new Error("ID do veículo inválido.");
         }
     
-        if (Object.keys(data).length === 0) {
+        if (data.cor !== undefined) {
+            if (!Object.values(CorVeiculo).includes(data.cor as CorVeiculo)) {
+                throw new Error(`Cor de veículo inválida para atualização. Valores permitidos: ${Object.values(CorVeiculo).join(', ')}`);
+            }
+          }
+
+         if (Object.keys(data).length === 0) {
             throw new Error("Nenhum dado fornecido para atualização.");
         }
-    
-        if (data.placa) {
-            data.placa = data.placa.toUpperCase();
+
+        if (data.cambio !== undefined) {
+            if (!Object.values(TipoCambio).includes(data.cambio as TipoCambio)) {
+                throw new Error(`Tipo de câmbio inválido para atualização. Valores permitidos: ${Object.values(TipoCambio).join(', ')}`);
+            }
         }
-    
-        if (data.anoFabricacao && (typeof data.anoFabricacao !== 'number' || data.anoFabricacao < 1900 || data.anoFabricacao > new Date().getFullYear() + 1)) {
-            throw new Error("Ano de fabricação inválido para atualização.");
+
+        if (data.status !== undefined) {
+            if (!Object.values(StatusVeiculo).includes(data.status as StatusVeiculo)) {
+                throw new Error(`Status de veículo inválido para atualização. Valores permitidos: ${Object.values(StatusVeiculo).join(', ')}`);
+            }
         }
-    
-        if (data.status && !Object.values(VeiculoStatus).includes(data.status)) {
-            throw new Error(`Status de veículo inválido. Valores permitidos: ${Object.values(VeiculoStatus).join(', ')}`);
+
+        if (data.kitRodaId === null) {
+            (data as any).kitRodaId = null; 
+        } else if (data.kitRodaId !== undefined) { 
+            if (typeof data.kitRodaId !== 'string') {
+                throw new Error("ID do Kit Roda inválido para atualização.");
+            }
+            const kitRodaExists = await this.prisma.produto.findUnique({ where: { id: data.kitRodaId } });
+            if (!kitRodaExists) {
+                throw new Error(`Produto (Kit Roda) com ID '${data.kitRodaId}' não encontrado para atualização.`);
+            }
         }
-    
+
         try {
-            const updatedVehicle = await this.prisma.veiculo.update({
+            const updatedVeiculo = await this.prisma.veiculo.update({
                 where: { id },
                 data: {
                     ...data,
-                    updatedAt: new Date()
-                },
+                   cor: data.cor ? (data.cor as CorVeiculo) : undefined,
+                    cambio: data.cambio ? (data.cambio as TipoCambio) : undefined,
+                    status: data.status ? (data.status as StatusVeiculo) : undefined,
+                }
             });
-            return updatedVehicle;
-    
+            
+            return updatedVeiculo;
+
         } catch (error: any) {
             if (error.code === 'P2025') {
-                throw new Error(`Veículo com ID '${id}' não encontrado.`);
+                throw new Error(`Veículo com ID '${id}' não encontrado para atualização.`);
             }
-    
-            if (error.code === 'P2002' && error.meta?.target?.includes('placa')) {
-                throw new Error(`Placa '${data.placa}' já está em uso por outro veículo.`);
-            }
-                throw new Error(`Erro ao atualizar veículo: ${error.message}`);
+            throw new Error(`Erro ao atualizar veículo: ${error.message}`);
         }
     }
     
     public async getAll(): Promise<Veiculo[]> {
         return this.prisma.veiculo.findMany({
             orderBy: { modelo: 'asc' },
+            include: {
+                kitRoda: true
+            }
         });
     }
     

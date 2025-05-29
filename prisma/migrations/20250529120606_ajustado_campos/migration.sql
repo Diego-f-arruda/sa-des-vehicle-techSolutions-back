@@ -1,11 +1,17 @@
 -- CreateEnum
-CREATE TYPE "TipoAcessorio" AS ENUM ('PECA', 'ELETRONICO', 'ACABAMENTO');
+CREATE TYPE "TipoAcessorio" AS ENUM ('PECA', 'ELETRONICO', 'ACABAMENTO', 'KIT_RODA');
+
+-- CreateEnum
+CREATE TYPE "CorVeiculo" AS ENUM ('PRETO', 'BRANCO', 'PRATA', 'VERMELHO', 'AZUL');
+
+-- CreateEnum
+CREATE TYPE "TipoCambio" AS ENUM ('AUTOMATICO', 'MANUAL');
 
 -- CreateEnum
 CREATE TYPE "StatusManutencao" AS ENUM ('pendente', 'finalizado');
 
 -- CreateEnum
-CREATE TYPE "VeiculoStatus" AS ENUM ('NOVO', 'EM_QUALIDADE', 'APROVADO', 'REPROVADO', 'EM_MANUTENCAO');
+CREATE TYPE "StatusVeiculo" AS ENUM ('APROVADO', 'REPROVADO', 'EM_PRODUCAO');
 
 -- CreateTable
 CREATE TABLE "users" (
@@ -13,34 +19,34 @@ CREATE TABLE "users" (
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP(3) NOT NULL,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "estoque" (
+CREATE TABLE "produto" (
     "id" TEXT NOT NULL,
     "nome" TEXT NOT NULL,
     "tipo" "TipoAcessorio" NOT NULL,
     "quantidade" INTEGER NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP(3) NOT NULL,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "estoque_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "produto_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "veiculos" (
     "id" TEXT NOT NULL,
     "modelo" TEXT NOT NULL,
-    "fabricante" TEXT NOT NULL,
-    "placa" TEXT NOT NULL,
-    "anoFabricacao" INTEGER NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "cor" "CorVeiculo" NOT NULL,
+    "cambio" "TipoCambio" NOT NULL,
+    "kitRodaId" TEXT,
+    "status" "StatusVeiculo" NOT NULL DEFAULT 'EM_PRODUCAO',
+    "createdAt" TIMESTAMP(3) NOT NULL,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "status" "VeiculoStatus" NOT NULL DEFAULT 'NOVO',
 
     CONSTRAINT "veiculos_pkey" PRIMARY KEY ("id")
 );
@@ -56,8 +62,7 @@ CREATE TABLE "qualidade" (
     "acabamentoInterno" BOOLEAN NOT NULL,
     "fluidos" BOOLEAN NOT NULL,
     "opcionais" BOOLEAN NOT NULL,
-    "numberOS" INTEGER NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP(3) NOT NULL,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "ordemDeServicoId" TEXT,
 
@@ -70,9 +75,9 @@ CREATE TABLE "ordens_de_servico" (
     "numberOS" TEXT NOT NULL,
     "veiculoId" TEXT NOT NULL,
     "qualidadeId" TEXT NOT NULL,
-    "dataAbertura" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "dataAbertura" TIMESTAMP(3) NOT NULL,
     "dataFechamento" TIMESTAMP(3),
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP(3) NOT NULL,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "ordens_de_servico_pkey" PRIMARY KEY ("id")
@@ -85,7 +90,7 @@ CREATE TABLE "manutencao" (
     "dataServico" TIMESTAMP(3) NOT NULL,
     "observacoes" TEXT,
     "status" "StatusManutencao" NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP(3) NOT NULL,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "qualidadeId" TEXT,
     "veiculoId" TEXT,
@@ -99,7 +104,7 @@ CREATE TABLE "produtosUsados" (
     "manutencaoId" TEXT NOT NULL,
     "produtoId" TEXT NOT NULL,
     "quantidade" INTEGER NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP(3) NOT NULL,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "produtosUsados_pkey" PRIMARY KEY ("id")
@@ -107,12 +112,6 @@ CREATE TABLE "produtosUsados" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
-
--- CreateIndex
-CREATE UNIQUE INDEX "veiculos_placa_key" ON "veiculos"("placa");
-
--- CreateIndex
-CREATE UNIQUE INDEX "qualidade_numberOS_key" ON "qualidade"("numberOS");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "qualidade_ordemDeServicoId_key" ON "qualidade"("ordemDeServicoId");
@@ -128,6 +127,9 @@ CREATE UNIQUE INDEX "manutencao_ordemDeServicoId_key" ON "manutencao"("ordemDeSe
 
 -- CreateIndex
 CREATE UNIQUE INDEX "manutencao_qualidadeId_key" ON "manutencao"("qualidadeId");
+
+-- AddForeignKey
+ALTER TABLE "veiculos" ADD CONSTRAINT "veiculos_kitRodaId_fkey" FOREIGN KEY ("kitRodaId") REFERENCES "produto"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "qualidade" ADD CONSTRAINT "qualidade_veiculoId_fkey" FOREIGN KEY ("veiculoId") REFERENCES "veiculos"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -148,4 +150,4 @@ ALTER TABLE "manutencao" ADD CONSTRAINT "manutencao_veiculoId_fkey" FOREIGN KEY 
 ALTER TABLE "produtosUsados" ADD CONSTRAINT "produtosUsados_manutencaoId_fkey" FOREIGN KEY ("manutencaoId") REFERENCES "manutencao"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "produtosUsados" ADD CONSTRAINT "produtosUsados_produtoId_fkey" FOREIGN KEY ("produtoId") REFERENCES "estoque"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "produtosUsados" ADD CONSTRAINT "produtosUsados_produtoId_fkey" FOREIGN KEY ("produtoId") REFERENCES "produto"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

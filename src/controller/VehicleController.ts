@@ -1,10 +1,10 @@
 import { FastifyInstance, FastifyRequest } from "fastify";
-import { CreateVehicleBody, UpdateVehicleBody } from "../types/Vehicle";
+import { CreateVeiculoBody, UpdateVehicleBody } from "../types/Vehicle";
 import { vehicleService } from "../service/VehicleService";
 
 export async function vehicleController(app: FastifyInstance){
 
-    app.post("/veiculo", async (request: FastifyRequest<{ Body: CreateVehicleBody}>, reply) => {
+    app.post("/veiculo", async (request: FastifyRequest<{ Body: CreateVeiculoBody}>, reply) => {
         const body = request.body 
 
         try {

@@ -27,23 +27,25 @@ model Produto {
   updatedAt  DateTime      @updatedAt
 
   utilizados ProdutoUsado[]
+  Veiculo    Veiculo[]
 
   @@map("produto")
 }
 
 model Veiculo {
-  id            String        @id
-  modelo        String
-  fabricante    String
-  placa         String        @unique
-  anoFabricacao Int
-  createdAt     DateTime
-  updatedAt     DateTime      @updatedAt
-  status        VeiculoStatus @default(NOVO)
+  id        String        @id
+  modelo    String
+  cor       CorVeiculo
+  cambio    TipoCambio
+  kitRodaId String?
+  kitRoda   Produto?      @relation(fields: [kitRodaId], references: [id])
+  status    StatusVeiculo @default(EM_PRODUCAO)
+  createdAt DateTime
+  updatedAt DateTime      @updatedAt
 
-  manutencoes     Manutencao[]
-  qualidades      Qualidade[]
-  ordensDeServico OrdemDeServico[]
+  manutencoes    Manutencao[]
+  Qualidade      Qualidade[]
+  OrdemDeServico OrdemDeServico[]
 
   @@map("veiculos")
 }
@@ -58,7 +60,6 @@ model Qualidade {
   acabamentoInterno Boolean
   fluidos           Boolean
   opcionais         Boolean
-  numberOS          Int      @unique
   createdAt         DateTime
   updatedAt         DateTime @updatedAt
 
@@ -74,7 +75,7 @@ model OrdemDeServico {
   numberOS       String    @unique
   veiculoId      String
   qualidadeId    String    @unique
-  dataAbertura   DateTime  @default(now())
+  dataAbertura   DateTime
   dataFechamento DateTime?
 
   createdAt DateTime
@@ -99,8 +100,8 @@ model Manutencao {
 
   ordemDeServico OrdemDeServico @relation(fields: [ordemDeServicoId], references: [id])
   produtosUsados ProdutoUsado[]
-  Veiculo        Veiculo       @relation(fields: [veiculoId], references: [id])
-  veiculoId      String
+  Veiculo        Veiculo?       @relation(fields: [veiculoId], references: [id])
+  veiculoId      String?
 
   @@map("manutencao")
 }
@@ -123,6 +124,20 @@ enum TipoAcessorio {
   PECA
   ELETRONICO
   ACABAMENTO
+  KIT_RODA
+}
+
+enum CorVeiculo {
+  PRETO
+  BRANCO
+  PRATA
+  VERMELHO
+  AZUL
+}
+
+enum TipoCambio {
+  AUTOMATICO
+  MANUAL
 }
 
 enum StatusManutencao {
@@ -130,10 +145,8 @@ enum StatusManutencao {
   finalizado
 }
 
-enum VeiculoStatus {
-  NOVO
-  EM_QUALIDADE
+enum StatusVeiculo {
   APROVADO
   REPROVADO
-  EM_MANUTENCAO
+  EM_PRODUCAO
 }
