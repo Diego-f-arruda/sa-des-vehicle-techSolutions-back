@@ -97,7 +97,6 @@ class ProductService {
 
         return updatedProduct
     }
-    
     public async getAll(): Promise<Produto[]> {
         return prisma.produto.findMany({
             orderBy: { nome: 'asc' }
