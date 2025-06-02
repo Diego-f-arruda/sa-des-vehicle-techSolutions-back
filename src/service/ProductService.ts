@@ -97,13 +97,15 @@ class ProductService {
 
         return updatedProduct
     }
-    public async getAll(): Promise<Produto[]> {
-        return prisma.produto.findMany({
+
+    public async getAll(tipo?: TipoAcessorio): Promise<Produto[]> { 
+        const whereClause = tipo ? { tipo: tipo } : {}; 
+
+        return this.prisma.produto.findMany({
+            where: whereClause, 
             orderBy: { nome: 'asc' }
-        })
-
-
-    };
+        });
+    }
 
 }
 
