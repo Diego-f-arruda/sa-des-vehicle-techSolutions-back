@@ -26,8 +26,9 @@ model Produto {
   createdAt  DateTime
   updatedAt  DateTime      @updatedAt
 
-  utilizados ProdutoUsado[]
-  Veiculo    Veiculo[]
+  kitRodasDeVeiculos   Veiculo[]          @relation("VeiculoKitRoda")
+  acessoriosEmVeiculos VeiculoAcessorio[] @relation("VeiculoAcessorioProduto")
+  usadoEmManutencoes   ProdutoUsado[]     @relation("ProdutoUsadoParaManutencao") // NOME DA RELAÇÃO ATUALIZADO
 
   @@map("produto")
 }
@@ -38,16 +39,31 @@ model Veiculo {
   cor       CorVeiculo
   cambio    TipoCambio
   kitRodaId String?
-  kitRoda   Produto?      @relation(fields: [kitRodaId], references: [id])
+  kitRoda   Produto?      @relation("VeiculoKitRoda", fields: [kitRodaId], references: [id])
   status    StatusVeiculo @default(EM_PRODUCAO)
   createdAt DateTime
   updatedAt DateTime      @updatedAt
 
-  manutencoes    Manutencao[]
-  Qualidade      Qualidade[]
-  OrdemDeServico OrdemDeServico[]
+  acessoriosVeiculo VeiculoAcessorio[] @relation("AcessoriosDoVeiculo")
+  manutencoes       Manutencao[]
+  Qualidade         Qualidade[]
+  OrdemDeServico    OrdemDeServico[]
 
   @@map("veiculos")
+}
+
+model VeiculoAcessorio {
+  id        String   @id
+  veiculoId String
+  produtoId String
+  createdAt DateTime
+  updatedAt DateTime @updatedAt
+
+  veiculo   Veiculo @relation(fields: [veiculoId], references: [id], name: "AcessoriosDoVeiculo")
+  acessorio Produto @relation(fields: [produtoId], references: [id], name: "VeiculoAcessorioProduto")
+
+  @@unique([veiculoId, produtoId])
+  @@map("veiculos_acessorios")
 }
 
 model Qualidade {
@@ -115,16 +131,16 @@ model ProdutoUsado {
   updatedAt    DateTime @updatedAt
 
   manutencao Manutencao @relation(fields: [manutencaoId], references: [id])
-  produto    Produto    @relation(fields: [produtoId], references: [id])
+  produto    Produto    @relation("ProdutoUsadoParaManutencao", fields: [produtoId], references: [id])
 
   @@map("produtosUsados")
 }
 
 enum TipoAcessorio {
   PECA
-  ELETRONICO
   ACABAMENTO
   KIT_RODA
+  ACESSORIO
 }
 
 enum CorVeiculo {

@@ -118,7 +118,12 @@ class VehicleService {
         return this.prisma.veiculo.findMany({
             orderBy: { modelo: 'asc' },
             include: {
-                kitRoda: true
+                kitRoda: { 
+                    select: { 
+                        id: true,
+                        nome: true
+                    }
+                }
             }
         });
     }
